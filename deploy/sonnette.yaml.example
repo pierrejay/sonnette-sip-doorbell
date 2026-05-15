@@ -1,0 +1,46 @@
+# Sonnette — Smart Doorbell Configuration
+# Copy to /etc/sonnette.yaml on the board and edit as needed.
+#
+# Credentials (Twilio, SIP) are NOT in this file — they live in a
+# separate file configured by credentials_file below. The sonnette
+# binary reads it directly (no source/export needed).
+#
+# Priority order (highest wins):
+#   credentials file > this YAML > built-in defaults
+
+# GPIO button — sysfs /sys/class/gpio/gpio<gpio_pin>.
+# RK3506 default: RMIO0 = GPIO0_A0 = gpio 0.
+gpio_pin: 0
+
+# Audio
+dingdong_wav: "/root/dingdong.wav"
+aplay_device: "default"
+snd_clock_rate: 16000
+
+# Anti-spam
+cooldown_sec: 30
+max_calls_per_hour: 10
+
+# Health check HTTP endpoint (for uptime monitoring)
+# Set to 0 to disable. Your monitoring server hits GET /health on this port.
+health_port: 8080
+
+# Event webhook (push notifications to a remote HTTP endpoint).
+# Empty URL disables the feature. The URL itself is sensitive if it
+# carries an auth token in the path — prefer setting EVENT_WEBHOOK_URL
+# in /etc/sonnette.conf (chmod 0600) rather than in this YAML.
+# Heartbeat: 0 disables the periodic heartbeat event; otherwise emit
+# a "heartbeat" POST every N seconds.
+event_webhook_url: ""
+event_webhook_heartbeat_sec: 0
+
+# Credentials file (shell KEY="value" format, read directly by sonnette)
+# No need to source/export — the binary parses it.
+credentials_file: "/etc/sonnette.conf"
+
+# pjsua
+pjsua_binary: "/usr/bin/pjsua"
+pjsua_log_file: "/var/log/pjsua.log"
+# 3 = operational info (registration/call state) without SIP packet trace.
+# Use 2 to reduce noise once stable; use 4+ only for short debugging sessions.
+pjsua_log_level: 3

@@ -1,0 +1,81 @@
+#!/bin/sh
+# ============================================================
+# S20firewall — iptables rules for sonnette
+# ============================================================
+# Install:
+#   adb push deploy/S20firewall /etc/init.d/S20firewall
+#   adb shell "chmod +x /etc/init.d/S20firewall"
+#
+# REQUIRES kernel netfilter support. Recent Sonnette images built from
+# this repo already enable it via bsp/rk3506_sonnette_kernel.config:
+#   CONFIG_NETFILTER=y
+#   CONFIG_NF_CONNTRACK=y
+#   CONFIG_NETFILTER_XTABLES=y
+#   CONFIG_NETFILTER_XT_MATCH_STATE=y
+#   CONFIG_IP_NF_IPTABLES=y
+#   CONFIG_IP_NF_FILTER=y
+#   CONFIG_IP_NF_TARGET_REJECT=y
+#
+# S20 runs early (before S90wifi, S99sonnette) so the firewall is up
+# before any service starts listening.
+#
+# Policy: DROP all inbound by default, whitelist what we need.
+#
+# To temporarily disable (e.g. for debugging):
+#   /etc/init.d/S20firewall stop
+
+IPTABLES=/usr/sbin/iptables
+
+# Local LAN (for SSH access and the health endpoint).
+LAN="192.168.0.0/24"
+
+start() {
+    # Flush existing rules
+    $IPTABLES -F INPUT
+
+    # Loopback: always allow
+    $IPTABLES -A INPUT -i lo -j ACCEPT
+
+    # Established/related: allow replies to our outbound traffic.
+    # SIP signaling uses an outbound TLS connection to Twilio (5061).
+    # SRTP media is separate UDP negotiated in SDP; conntrack keeps the
+    # return path open once pjsua sends media, so there is no inbound
+    # SIP/RTP port to whitelist.
+    $IPTABLES -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+
+    # SSH from LAN only (key-auth, but still restrict by network)
+    $IPTABLES -A INPUT -i wlan0 -p tcp --dport 22 -s $LAN -j ACCEPT
+
+    # Health check from LAN only
+    $IPTABLES -A INPUT -i wlan0 -p tcp --dport 8080 -s $LAN -j ACCEPT
+
+    # DHCP client (needed for udhcpc lease renewal)
+    $IPTABLES -A INPUT -p udp --sport 67 --dport 68 -j ACCEPT
+
+    # Drop everything else
+    $IPTABLES -P INPUT DROP
+
+    echo "Firewall rules loaded"
+}
+
+stop() {
+    $IPTABLES -F INPUT
+    $IPTABLES -P INPUT ACCEPT
+    echo "Firewall rules flushed (all traffic allowed)"
+}
+
+status() {
+    echo "=== iptables INPUT chain ==="
+    $IPTABLES -L INPUT -n --line-numbers
+}
+
+case "$1" in
+    start)   start ;;
+    stop)    stop ;;
+    restart) stop; start ;;
+    status)  status ;;
+    *)
+        echo "Usage: $0 {start|stop|restart|status}"
+        exit 1
+        ;;
+esac

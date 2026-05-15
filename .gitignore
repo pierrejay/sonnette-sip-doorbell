@@ -1,0 +1,12 @@
+.DS_Store
+
+# pjsua cross-compilation (sources + tarball + binary)
+pjsua/pjproject-*/
+pjsua/*.tar.gz
+pjsua/pjsua-*
+
+# Go binary (cross-compiled)
+sonnette-arm7
+
+# Real credentials (use deploy/sonnette.conf.example as template)
+deploy/etc/

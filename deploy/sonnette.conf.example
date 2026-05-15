@@ -1,0 +1,62 @@
+# ============================================================
+# SONNETTE — Credentials & secrets
+# ============================================================
+# This file is read directly by the sonnette binary at startup
+# (shell KEY="value" format). No need to source or export.
+#
+# Installation:
+#   mkdir -p deploy/etc
+#   cp deploy/sonnette.conf.example deploy/etc/sonnette.conf
+#   # Fill in your real credentials locally
+#   adb push deploy/etc/sonnette.conf /etc/sonnette.conf
+#   adb shell "chmod 0600 /etc/sonnette.conf"
+#
+# The file path is configured via credentials_file in sonnette.yaml
+# (defaults to /etc/sonnette.conf).
+# ============================================================
+
+# ------------------------------------------------------------
+# Twilio REST API credentials
+# Get these from https://console.twilio.com/
+# ------------------------------------------------------------
+TWILIO_ACCOUNT_SID="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"   # Account SID (starts with AC)
+TWILIO_AUTH_TOKEN="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"       # Auth Token
+
+# ------------------------------------------------------------
+# Phone numbers
+# ------------------------------------------------------------
+TWILIO_FROM_NUMBER="+33900000000"    # Twilio phone number (caller ID)
+TWILIO_TO_NUMBER="+33600000000"      # Your phone number (called when button pressed)
+
+# ------------------------------------------------------------
+# TwiML Bin URL
+# This TwiML tells Twilio to dial the SIP endpoint when the
+# owner picks up. Create one at https://console.twilio.com/twiml-bins
+# Content (the ;transport=tls;secure=true parameters are REQUIRED —
+# without them Twilio falls back to plain RTP and the audio goes in
+# clear; see docs/twilio.md for the full setup):
+#   <Response>
+#     <Dial>
+#       <Sip>sip:USERNAME@DOMAIN;transport=tls;secure=true</Sip>
+#     </Dial>
+#   </Response>
+# ------------------------------------------------------------
+TWILIO_TWIML_URL="https://handler.twilio.com/twiml/EHxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+
+# ------------------------------------------------------------
+# SIP credentials (Twilio SIP Domain)
+# Create at https://console.twilio.com/ → Elastic SIP Trunking
+# or Programmable Voice → SIP Domains
+# ------------------------------------------------------------
+SIP_USERNAME="sonnette01"                   # SIP endpoint username
+SIP_PASSWORD="changeme"                     # SIP endpoint password
+SIP_DOMAIN="your-app.sip.us1.twilio.com"   # SIP domain FQDN
+SIP_REALM="sip.twilio.com"                 # Auth realm (always sip.twilio.com for Twilio)
+
+# ------------------------------------------------------------
+# Optional event webhook
+# If set, sonnette POSTs ring/call/heartbeat events to this URL.
+# Recommended location for the URL when it carries an auth token in
+# the path (otherwise the YAML works too).
+# ------------------------------------------------------------
+# EVENT_WEBHOOK_URL="https://my-home-server.example/sonnette/abc123def456"

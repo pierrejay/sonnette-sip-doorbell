@@ -1,0 +1,21 @@
+# Logrotate config for pjsua's log file.
+#
+# sonnette's own log goes through `logger -t sonnette` to syslog
+# (BusyBox syslogd already rotates /var/log/messages by size, so
+# nothing to do for it). Only /var/log/pjsua.log needs handling here:
+# it's a plain file written directly by sonnette (see sip.go), it can
+# grow with verbose pjsua output, and copytruncate is safe because
+# sonnette restarts pjsua periodically and reopens the file each time.
+#
+# Install: adb push deploy/logrotate.sonnette /etc/logrotate.d/sonnette
+# Run (cron or manual): logrotate /etc/logrotate.conf
+
+/var/log/pjsua.log {
+    size 1M
+    rotate 3
+    missingok
+    notifempty
+    copytruncate
+    compress
+    delaycompress
+}

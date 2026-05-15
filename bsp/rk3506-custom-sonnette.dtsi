@@ -1,0 +1,236 @@
+// SPDX-License-Identifier: (GPL-2.0-or-later OR MIT)
+/*
+ * Custom Sonnette Board for RK3506G2
+ * Smart doorbell with PDM mic, I2S speaker, GPIO ring button
+ *
+ * RMIO pin map:
+ *   RMIO0  — Ring button (GPIO0_A0, input active low, sysfs userspace)
+ *   RMIO1  — PDM CLK (mic MP34DT05TR-A)
+ *   RMIO2  — PDM SDI0 (mic MP34DT05TR-A)
+ *   RMIO15 — SAI1 LRCK (speaker MAX98357A)
+ *   RMIO16 — SAI1 SCLK (speaker MAX98357A)
+ *   RMIO17 — SAI1 SDO0 (speaker MAX98357A)
+ */
+
+#include <dt-bindings/pinctrl/rockchip.h>
+#include <dt-bindings/suspend/rockchip-rk3506.h>
+#include "rk3506.dtsi"
+
+/ {
+	/* Apply ring button pinctrl at boot (no driver claims this pin) */
+	pinctrl-names = "default";
+	pinctrl-0 = <&ring_button_pin>;
+
+	fiq_debugger: fiq-debugger {
+		compatible = "rockchip,fiq-debugger";
+		rockchip,serial-id = <0>;
+		rockchip,wake-irq = <0>;
+		rockchip,irq-mode-enable = <1>;
+		rockchip,baudrate = <115200>;
+		interrupts = <GIC_SPI 115 IRQ_TYPE_LEVEL_HIGH>;
+	};
+
+	leds: leds {
+		compatible = "gpio-leds";
+		work_led: work-led {
+			gpios = <&gpio3 RK_PB0 GPIO_ACTIVE_HIGH>;
+			linux,default-trigger = "heartbeat";
+		};
+	};
+
+	/* Power regulators - fixed voltage (no PMIC) */
+	vcc_sys: vcc-sys {
+		compatible = "regulator-fixed";
+		regulator-name = "vcc_sys";
+		regulator-always-on;
+		regulator-boot-on;
+		regulator-min-microvolt = <5000000>;
+		regulator-max-microvolt = <5000000>;
+	};
+
+	vcc_3v3: vcc-3v3 {
+		compatible = "regulator-fixed";
+		regulator-name = "vcc_3v3";
+		regulator-always-on;
+		regulator-boot-on;
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		vin-supply = <&vcc_sys>;
+	};
+
+	vcc_1v8: vcc-1v8 {
+		compatible = "regulator-fixed";
+		regulator-name = "vcc_1v8";
+		regulator-always-on;
+		regulator-boot-on;
+		regulator-min-microvolt = <1800000>;
+		regulator-max-microvolt = <1800000>;
+		vin-supply = <&vcc_3v3>;
+	};
+
+	vcc_ddr: vcc-ddr {
+		compatible = "regulator-fixed";
+		regulator-name = "vcc_ddr";
+		regulator-always-on;
+		regulator-boot-on;
+		vin-supply = <&vcc_sys>;
+	};
+
+	vdd_0v9: vdd-0v9 {
+		compatible = "regulator-fixed";
+		regulator-name = "vdd_0v9";
+		regulator-always-on;
+		regulator-boot-on;
+		regulator-min-microvolt = <900000>;
+		regulator-max-microvolt = <900000>;
+		vin-supply = <&vcc_sys>;
+	};
+
+	vdd_cpu: vdd-cpu {
+		compatible = "regulator-fixed";
+		regulator-name = "vdd_cpu";
+		regulator-boot-on;
+		regulator-always-on;
+		regulator-min-microvolt = <950000>;
+		regulator-max-microvolt = <950000>;
+		vin-supply = <&vcc_sys>;
+	};
+
+	/* USB OTG1 VBUS power control */
+	vcc5v0_otg1: vcc5v0-otg1 {
+		compatible = "regulator-fixed";
+		regulator-name = "vcc5v0_otg1";
+		regulator-min-microvolt = <5000000>;
+		regulator-max-microvolt = <5000000>;
+		gpio = <&gpio1 RK_PA0 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		vin-supply = <&vcc_sys>;
+	};
+
+	/**********audio - sound cards**********/
+
+	/* PDM microphone capture - dummy codec (PDM mic has no I2C control) */
+	pdmics: pdm-dummy-codec {
+		compatible = "rockchip,dummy-codec";
+		#sound-dai-cells = <0>;
+	};
+
+	pdm_mic_sound: pdm-mic-sound {
+		compatible = "simple-audio-card";
+		simple-audio-card,name = "pdm-mic";
+		simple-audio-card,format = "pdm";
+		simple-audio-card,cpu {
+			sound-dai = <&pdm>;
+		};
+		simple-audio-card,codec {
+			sound-dai = <&pdmics>;
+		};
+	};
+
+	/* I2S speaker playback - MAX98357A (no I2C, pure I2S amp) */
+	spk_amp: spk-dummy-codec {
+		compatible = "maxim,max98357a";
+		#sound-dai-cells = <0>;
+	};
+
+	i2s_spk_sound: i2s-spk-sound {
+		compatible = "simple-audio-card";
+		simple-audio-card,name = "i2s-speaker";
+		simple-audio-card,format = "i2s";
+		simple-audio-card,mclk-fs = <256>;
+		simple-audio-card,bitclock-master = <&spk_cpu>;
+		simple-audio-card,frame-master = <&spk_cpu>;
+		spk_cpu: simple-audio-card,cpu {
+			sound-dai = <&sai1>;
+		};
+		simple-audio-card,codec {
+			sound-dai = <&spk_amp>;
+		};
+	};
+};
+
+/**********cpu**********/
+&cpu0 {
+	cpu-supply = <&vdd_cpu>;
+	status = "okay";
+};
+
+/**********ethernet GMAC0 — not populated on sonnette board **********/
+&gmac0 {
+	status = "disabled";
+};
+
+/**********storage — SD card not populated on sonnette board **********/
+&mmc {
+	status = "disabled";
+};
+
+&fspi {
+	/* SPI NAND Flash XTX XT26G04C */
+	status = "okay";
+
+	flash@0 {
+		compatible = "spi-nand";
+		reg = <0>;
+		spi-max-frequency = <80000000>;
+		spi-rx-bus-width = <4>;
+		spi-tx-bus-width = <1>;
+	};
+};
+
+/**********adc**********/
+&saradc {
+	vref-supply = <&vcc_1v8>;
+	status = "okay";
+};
+
+&tsadc {
+	status = "okay";
+};
+
+/**********usb**********/
+&usb20_otg0 {
+	dr_mode = "peripheral";
+	status = "okay";
+};
+
+&usb20_otg1 {
+	dr_mode = "host";
+	vbus-supply = <&vcc5v0_otg1>;
+	status = "okay";
+};
+
+&usb2phy {
+	status = "okay";
+};
+
+&u2phy_otg0 {
+	status = "okay";
+};
+
+&u2phy_otg1 {
+	status = "okay";
+};
+
+/**********audio - PDM mic on RMIO1(CLK) + RMIO2(SDI0) **********/
+&pdm {
+	status = "okay";
+	pinctrl-names = "default";
+	pinctrl-0 = <&rm_io1_pdm_clk0 &rm_io2_pdm_sdi0>;
+};
+
+/**********audio - SAI1 speaker on RMIO16(SCLK) + RMIO15(LRCK) + RMIO17(SDO0) **********/
+&sai1 {
+	status = "okay";
+	pinctrl-names = "default";
+	pinctrl-0 = <&rm_io16_sai1_sclk &rm_io15_sai1_lrck &rm_io17_sai1_sdo0>;
+};
+
+/**********pinctrl**********/
+&pinctrl {
+	ring_button {
+		ring_button_pin: ring-button-pin {
+			rockchip,pins = <0 RK_PA0 RK_FUNC_GPIO &pcfg_pull_up_smt>;
+		};
+	};
+};

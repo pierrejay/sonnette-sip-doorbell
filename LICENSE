@@ -1,0 +1,95 @@
+# License
+
+This repository contains project files under different licenses depending
+on their purpose.
+
+## Software, Firmware, Scripts And Documentation
+
+Unless stated otherwise, project-authored software, firmware, scripts,
+Makefiles, deployment files and documentation are released under the MIT
+License.
+
+Copyright (c) 2026 Pierre Jay
+
+This includes, for example:
+
+- `sonnette/`
+- `deploy/`
+- `docs/`
+- `pjsua/Makefile`
+- `pjsua/README.md`
+- top-level `Makefile`
+- `README.md`
+
+MIT License text:
+
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the "Software"),
+to deal in the Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
+
+## Hardware Design Files
+
+Hardware design files are released under the CERN Open Hardware Licence
+Version 2 - Permissive (`CERN-OHL-P-2.0`).
+
+Copyright (c) 2026 Pierre Jay
+
+This includes:
+
+- `eda/sonnette.epro`
+- `eda/sonnette_sch.pdf`
+- hardware design exports derived from the EasyEDA project
+
+Full text:
+https://ohwr.org/cern_ohl_p_v2.txt
+
+## Board Support Files
+
+Device tree files in `bsp/` keep their SPDX license headers:
+
+- `GPL-2.0-or-later OR MIT`
+
+Other project-authored BSP integration/config files in `bsp/` are
+released under the MIT License unless an individual file header says
+otherwise.
+
+The Luckfox/Rockchip SDK itself is not included in this repository and
+remains under its own upstream licenses.
+
+## Third-Party Software
+
+This repository contains build instructions for pjproject/PJSIP but does
+not include or relicense pjproject itself. If you redistribute binaries or
+firmware images containing pjsua, comply with pjproject/PJSIP licensing.
+
+The Luckfox/Rockchip SDK, Linux kernel, U-Boot, Buildroot packages,
+firmware blobs and toolchains remain under their respective upstream
+licenses.
+
+## Audio Asset
+
+`deploy/dingdong.wav` is adapted from a sound obtained from
+LaSonotheque.org.
+
+LaSonotheque states that sounds marked "Gratuit et Libre de droits" may
+be copied, adapted and used, including commercially, without asking for
+permission:
+https://lasonotheque.org/licences.html
+
+Credit is appreciated by LaSonotheque but not required. Suggested credit:
+
+"Sound adapted from LaSonotheque.org / Joseph Sardin."

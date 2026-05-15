@@ -1,0 +1,66 @@
+#!/bin/sh
+# ============================================================
+# S99sonnette — control wrapper for sonnette daemon
+# ============================================================
+# This script does NOT start sonnette directly. It toggles a
+# disable flag (/tmp/sonnette.disable) that the inittab respawn
+# line watches. init supervises the daemon and restarts it on
+# crash; this script just tells init whether to let it run.
+#
+# Install:
+#   adb push deploy/S99sonnette /etc/init.d/S99sonnette
+#   adb shell "chmod +x /etc/init.d/S99sonnette"
+#   adb push deploy/inittab.fragment /tmp/inittab.fragment
+#   adb shell "cat /tmp/inittab.fragment >> /etc/inittab && rm /tmp/inittab.fragment"
+#   adb shell "kill -HUP 1"   # make init reload /etc/inittab
+#
+# Usage: /etc/init.d/S99sonnette {start|stop|restart|status}
+
+DISABLE_FLAG=/tmp/sonnette.disable
+DAEMON_NAME=sonnette
+
+start() {
+    rm -f "$DISABLE_FLAG"
+    echo "Enabled — init will respawn sonnette within ~10s"
+}
+
+stop() {
+    touch "$DISABLE_FLAG"
+    PID=$(pidof "$DAEMON_NAME")
+    if [ -n "$PID" ]; then
+        kill -TERM $PID 2>/dev/null
+        # Wait up to 2s for clean shutdown
+        i=0
+        while [ $i -lt 20 ] && pidof "$DAEMON_NAME" >/dev/null; do
+            sleep 0.1
+            i=$((i + 1))
+        done
+        PID=$(pidof "$DAEMON_NAME")
+        [ -n "$PID" ] && kill -KILL $PID 2>/dev/null
+    fi
+    echo "Disabled — sonnette stopped, will not be respawned"
+}
+
+status() {
+    if [ -f "$DISABLE_FLAG" ]; then
+        echo "Disabled (remove $DISABLE_FLAG to re-enable)"
+    else
+        PID=$(pidof "$DAEMON_NAME")
+        if [ -n "$PID" ]; then
+            echo "Running (pid $PID)"
+        else
+            echo "Enabled but not running — init should respawn shortly"
+        fi
+    fi
+}
+
+case "$1" in
+    start)   start ;;
+    stop)    stop ;;
+    restart) stop; sleep 1; start ;;
+    status)  status ;;
+    *)
+        echo "Usage: $0 {start|stop|restart|status}"
+        exit 1
+        ;;
+esac

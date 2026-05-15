@@ -1,0 +1,7 @@
+# Sonnette — inittab respawn line
+# Append to /etc/inittab on the board.
+# init will start sonnette at boot and respawn it on crash.
+# To disable temporarily: touch /tmp/sonnette.disable
+# To re-enable: rm /tmp/sonnette.disable
+
+::respawn:/bin/sh -c '[ -f /tmp/sonnette.disable ] && sleep 10 && exit 0; exec /usr/bin/sonnette -config /etc/sonnette.yaml 2>&1 | logger -t sonnette'

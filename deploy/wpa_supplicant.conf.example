@@ -1,0 +1,23 @@
+# wpa_supplicant.conf — WiFi credentials template
+# Copy to /etc/wpa_supplicant.conf on the board and fill in your network(s).
+# chmod 0600 /etc/wpa_supplicant.conf   (contains the psk in clear)
+
+ctrl_interface=/var/run/wpa_supplicant
+ap_scan=1
+update_config=1
+
+# RTL8188EU only supports 2.4 GHz — do not bother with 5 GHz networks.
+
+network={
+    ssid="YourSSID"
+    psk="YourPassword"
+}
+
+# For multiple networks, add more blocks and set priorities
+# (higher = tried first):
+#
+# network={
+#     ssid="Backup"
+#     psk="BackupPassword"
+#     priority=5
+# }

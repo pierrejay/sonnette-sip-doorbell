@@ -1,0 +1,45 @@
+#!/bin/sh
+# ============================================================
+# S90wifi — bring up WiFi on boot via wpa_supplicant + udhcpc
+# ============================================================
+# Install:
+#   adb push deploy/S90wifi /etc/init.d/S90wifi
+#   adb shell "chmod +x /etc/init.d/S90wifi"
+#   adb push deploy/etc/wpa_supplicant.conf /etc/wpa_supplicant.conf
+#   adb shell "chmod 0600 /etc/wpa_supplicant.conf"
+#
+# The S90 prefix runs late in the boot sequence (after S50 kernel
+# modules and before S99sonnette), so sonnette starts with the
+# network already up.
+#
+# The staging RTL8188EU driver only supports wext (not nl80211), hence
+# `wpa_supplicant -D wext`.
+
+IFACE=wlan0
+
+case "$1" in
+    start)
+        # Load driver if it's built as a module (harmless if built-in)
+        modprobe r8188eu 2>/dev/null
+        sleep 1
+        ifconfig "$IFACE" up 2>/dev/null || exit 0
+        wpa_supplicant -B -i "$IFACE" -D wext -c /etc/wpa_supplicant.conf
+        udhcpc -i "$IFACE" -b
+        ;;
+    stop)
+        killall udhcpc wpa_supplicant 2>/dev/null
+        ifconfig "$IFACE" down 2>/dev/null
+        ;;
+    restart)
+        $0 stop
+        sleep 1
+        $0 start
+        ;;
+    status)
+        wpa_cli -i "$IFACE" status 2>/dev/null || echo "WiFi not running"
+        ;;
+    *)
+        echo "Usage: $0 {start|stop|restart|status}"
+        exit 1
+        ;;
+esac
