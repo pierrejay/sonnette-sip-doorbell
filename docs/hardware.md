@@ -33,8 +33,8 @@ The repo separates the hardware-related concerns:
 - `bsp/` contains the board support files copied into the Luckfox/Rockchip
   SDK: device tree and Buildroot/Rockchip defconfigs.
 - `eda/` contains the schematic PDF (`sonnette_sch.pdf`), a 3D render
-  of the assembled PCB (`sonnette_pcb_3d.png`), and the editable
-  EasyEDA Pro project (`sonnette.epro`).
+  of the assembled PCB (`sonnette_pcb_3d.png`), the editable
+  EasyEDA Pro project (`sonnette.epro`) & interactive BOM (`sonnette_interactive_bom.html`).
 
 Main components:
 
